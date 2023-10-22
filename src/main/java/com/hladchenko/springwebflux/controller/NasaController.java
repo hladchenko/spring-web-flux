@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 @RequestMapping("/pictures")
 @RestController
@@ -14,13 +14,14 @@ public class NasaController {
     public static final String URL = "";
 
     @GetMapping("/largest")
-    public Mono<Object> getLargestPicture() {
+    public Flux<String> getLargestPicture() {
 
-        return WebClient.create(URL)
+        Flux<String> srcFlux = WebClient.create(URL)
                 .get().exchangeToMono(clientResponse -> clientResponse.bodyToMono(JsonNode.class))
                 .map(jsonNode -> jsonNode.get("photos"))
-                .map(jsonNode -> jsonNode.findValuesAsText("img_src")
-                        .stream()
-                        .map(url -> WebClient.create(url).get().retrieve()));
+                .flatMapIterable(jsonNode -> jsonNode.findValuesAsText("img_src"));
+
+
+        return srcFlux;
     }
 }
