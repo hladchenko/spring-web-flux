@@ -19,7 +19,7 @@ public class NasaController {
 
     private static final WebClient webClient = WebClient
             .builder()
-            .codecs(clientCodecConfigurer -> clientCodecConfigurer.defaultCodecs().maxInMemorySize(1_000_000))
+            .codecs(clientCodecConfigurer -> clientCodecConfigurer.defaultCodecs().maxInMemorySize(2 * 1024 * 1024))
             .build();
 
     public static final String URL = "https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?sol=17&api_key=vitG5CeayGcf74hW1oOr2KQcEZvoNx2useVarV8u";
