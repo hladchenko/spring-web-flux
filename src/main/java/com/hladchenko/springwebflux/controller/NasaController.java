@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.hladchenko.springwebflux.entity.Picture;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,7 +18,7 @@ public class NasaController {
 
     public static final String URL = "https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?sol=17&api_key=vitG5CeayGcf74hW1oOr2KQcEZvoNx2useVarV8u";
 
-    @GetMapping(value = "/largest", produces = "image/jpeg")
+    @GetMapping(value = "/largest", produces = MediaType.IMAGE_JPEG_VALUE)
     public Mono<byte[]> getLargestPicture() {
         return WebClient
                 .create()
