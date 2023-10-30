@@ -5,7 +5,6 @@ import com.hladchenko.springwebflux.entity.Picture;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.codec.ClientCodecConfigurer;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,10 +16,11 @@ import reactor.core.publisher.Mono;
 @RestController
 public class NasaController {
 
-    private static final WebClient webClient = WebClient
-            .builder()
-            .codecs(clientCodecConfigurer -> clientCodecConfigurer.defaultCodecs().maxInMemorySize(2 * 1024 * 1024))
-            .build();
+    private final WebClient webClient;
+
+    public NasaController(WebClient webClient) {
+        this.webClient = webClient;
+    }
 
     public static final String URL = "https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?sol=17&api_key=vitG5CeayGcf74hW1oOr2KQcEZvoNx2useVarV8u";
 
@@ -31,13 +31,13 @@ public class NasaController {
                 .uri(URL)
                 .exchangeToMono(clientResponse -> clientResponse.bodyToMono(JsonNode.class))
                 .flatMapIterable(jsonNode -> jsonNode.findValuesAsText("img_src"))
-                .flatMap(NasaController::getPicture)
+                .flatMap(this::getPicture)
                 .reduce((picture1, picture2) -> picture1.size() > picture2.size() ? picture1 : picture2)
                 .map(Picture::src)
                 .flatMap(src -> getBinary(src.toString()));
     }
 
-    private static Mono<Picture> getPicture(String url) {
+    private Mono<Picture> getPicture(String url) {
          return webClient
                  .head()
                  .uri(url)
@@ -47,12 +47,12 @@ public class NasaController {
                  .flatMap(uri -> getSize(uri.toString()).map(size -> new Picture(size, uri)));
     }
 
-    private static Mono<Long> getSize(String src) {
+    private Mono<Long> getSize(String src) {
          return webClient.head().uri(src).exchangeToMono(ClientResponse::toBodilessEntity)
                  .map(voidResponseEntity -> voidResponseEntity.getHeaders().getContentLength());
     }
 
-    private static Mono<byte[]> getBinary(String src) {
+    private Mono<byte[]> getBinary(String src) {
         return webClient.get().uri(src).exchangeToMono(clientResponse -> clientResponse.bodyToMono(byte[].class));
     }
 }
